@@ -59,19 +59,31 @@ end
 
 function _draw() 
 	cls()
-	print("Fetched scores: "..#chat_log)
+	--print("Fetched scores: "..#chat_log)
+	
 	local start_y = 10
 	local max_lines = 12
 	local start_index = max(1, #chat_log - max_lines + 1)
 	
 	for i = start_index, #chat_log do
 		local msg = chat_log[i]
-		if type(msg.text) == "table" then
-			print(msg.name..": "..msg.text[1], 5, start_y, 7)
-			start_y += 11
-		else
-			print(msg.name..": "..msg.text, 5, start_y, 7)
+		local text = type(msg.text) == "table" and msg.text[1] or msg.text
+		local line = msg.name..": "
+		
+		for word in text:gmatch("%S+") do
+			for j = 1, #word do
+				local test = line..word:sub(j, j)
+				if print(test, 0, -99) > scr.w - 20 then
+					print(line, 5, start_y, 7)
+					start_y += 11
+					line = word:sub(j, j)
+				else
+					line = test
+				end
+			end
+			line = line.." "
 		end
+		print(line, 5, start_y, 7)
 		start_y += 11
 	end
 
