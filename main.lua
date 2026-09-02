@@ -13,6 +13,8 @@ on_event("resize", function(msg)
 	for el in all(gui.child) do
 		if el.resize then
 			el:resize()
+		elseif el.child[1].resize then
+			el.child[1]:resize()
 		end
 	end
 end)
@@ -22,7 +24,7 @@ function _init()
 	window(scr.w, scr.h, {resizable = true, pauseable = false})
 	
 	text_input = gui:attach_text_editor {
-		x = 5, y = 145, height = 15,
+		x = 10, y = 145, width= 100, height = 15,
 		key_callback = {
 			enter = function(self)
 				scoresub_send_packet(self:get_text()[1])
@@ -34,6 +36,7 @@ function _init()
 		resize = function(self)
 			--add(chat_log, {name = "debug", text = "text_input update"})
 			self.parent.width = scr.w - 10
+			self.width = self.parent.width
 		end
 	}
 	
