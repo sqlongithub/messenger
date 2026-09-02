@@ -1,14 +1,28 @@
 --[[pod_format="raw",created="2026-08-31 10:12:09",modified="2026-08-31 10:12:09",revision=1]]
 include("scorelib.lua")	
 
+scr = { w = 160, h = 168 }
+gui = create_gui({x = 0, y = 0, width = scr.w, height = scr.h})
+
+on_event("resize", function(msg)
+	scr.w = msg.width
+	scr.h = msg.height
+
+	--add(chat_log, {name = "debug", text = "Resized to: "..scr.w.."x"..scr.h})
+	
+	for el in all(gui.child) do
+		if el.resize then
+			el:resize()
+		end
+	end
+end)
+
 function _init()
-	scr = { w = 160, h = 168 }
+
 	window(scr.w, scr.h, {resizable = true, pauseable = false})
 	
-	gui = create_gui({x = 0, y = 0, width = scr.w, height = scr.h})
-
 	text_input = gui:attach_text_editor {
-		x = 5, y = 145, width = 150, height = 15,
+		x = 5, y = 145, height = 15,
 		key_callback = {
 			enter = function(self)
 				scoresub_send_packet(self:get_text()[1])
@@ -16,7 +30,11 @@ function _init()
 				self:set_text("")
 
 			end
-		}
+		},
+		resize = function(self)
+			--add(chat_log, {name = "debug", text = "text_input update"})
+			self.parent.width = scr.w - 10
+		end
 	}
 	
 	chat_log = {}
@@ -24,7 +42,15 @@ function _init()
 	fetch_interval = 30 
 
 	scoresub_set_table("messenger_room_1")
+
+	for el in all(gui.child) do
+		if el.resize then
+			el:resize()
+		end
+	end
 end
+
+
 
 function _draw() 
 	cls()
@@ -57,13 +83,11 @@ function _update()
 		if packet then
 			local timestamp = packet.timestamp
 			local message = packet.extra
-			add(chat_log, {name = "debug", text = "packet recieved"})
+		--	add(chat_log, {name = "debug", text = "packet recieved"})
 			if timestamp and message then
 				local name = packet.username
 				add(chat_log, {name = name, text = message})
 			end
 		end
 	end
-	
-	
 end
