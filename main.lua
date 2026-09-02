@@ -24,7 +24,7 @@ function _init()
 	window(scr.w, scr.h, {resizable = true, pauseable = false})
 	
 	text_input = gui:attach_text_editor {
-		x = 10, y = 145, width= 100, height = 15,
+		x = 10, y = scr.h - 10, width= 100, height = 15,
 		key_callback = {
 			enter = function(self)
 				scoresub_send_packet(self:get_text()[1])
@@ -37,6 +37,8 @@ function _init()
 			--add(chat_log, {name = "debug", text = "text_input update"})
 			self.parent.width = scr.w - 10
 			self.width = self.parent.width
+			self.parent.y = scr.h - self.height - 5
+			self.y = 0
 		end
 	}
 	
