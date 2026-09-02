@@ -12,7 +12,7 @@ function _init()
 		key_callback = {
 			enter = function(self)
 				scoresub_send_packet(self:get_text()[1])
-				add(chat_log, {name = stat(65), text = self:get_text()[1]})
+				--add(chat_log, {name = stat(65), text = self:get_text()[1]})
 				self:set_text("")
 
 			end
@@ -23,7 +23,7 @@ function _init()
 	last_fetch = 0
 	fetch_interval = 30 
 
-	scoresub_set_table("messenger_room-1")
+	scoresub_set_table("messenger_room_1")
 end
 
 function _draw() 
