@@ -84,29 +84,41 @@ function _draw()
 	for i = start_index, #chat_log do
 		-- if we are past the bottom of the screen then dont print anymore
 		if start_y > max_y then break end
-		-- 
 		local msg = chat_log[i]
 		local text = type(msg.text) == "table" and msg.text[1] or msg.text
+
+		-- initialize the line "user: "
 		local line = msg.name..": "
 		
+		-- for each word in the text (%S+ splits on space)
 		for word in text:gmatch("%S+") do
+			-- j is the index of the current char in the word
 			for j = 1, #word do
+				-- test is the line with the current char appended
+				-- print returns the width of the text printed text
+				-- some characters are wider than others so we need to test it like this
 				local test = line..word:sub(j, j)
+				-- print outside the screen and check if the width is smaller than the screen width
 				if print(test, 0, -99) > scr.w - 20 then
-					if start_y <= max_y then
-						print(line, 5, start_y, 7)
-					end
+					-- if doesnt fit we print the line 
+					print(line, 5, start_y, 7)
+					-- go to the next line
 					start_y += 11
+					-- start a new line with the current char which didnt fit
 					line = word:sub(j, j)
 				else
+					-- if it fits the line is just the entire word
 					line = test
 				end
 			end
+			-- keep appending words to the line
 			line = line.." "
 		end
 		if start_y <= max_y then
+			-- print the line if we are still within the screen height
 			print(line, 5, start_y, 7)
 		end
+		-- go to the next line
 		start_y += 11
 	end
 
