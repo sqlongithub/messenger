@@ -4,12 +4,17 @@ include("scorelib.lua")
 scr = { w = 160, h = 168 }
 gui = create_gui({x = 0, y = 0, width = scr.w, height = scr.h})
 
+-- on window resize event handler
+-- msg is the message sent alongside the event (data about new window size)
 on_event("resize", function(msg)
+	-- update our global screen width and height
 	scr.w = msg.width
 	scr.h = msg.height
 
+	-- debug print the new window resolution
 	--add(chat_log, {name = "debug", text = "Resized to: "..scr.w.."x"..scr.h})
 	
+	-- call the resize function for all gui elements (gui.child)
 	for el in all(gui.child) do
 		if el.resize then
 			el:resize()
@@ -21,14 +26,18 @@ end)
 
 function _init()
 
+	-- create a window
 	window(scr.w, scr.h, {resizable = true, pauseable = false})
 	
+	-- create a text input field
 	text_input = gui:attach_text_editor {
 		x = 10, y = scr.h - 10, width= 100, height = 15,
 		key_callback = {
 			enter = function(self)
+				-- submit the message packet with the first line of the text editor
 				scoresub_send_packet(self:get_text()[1])
 				--add(chat_log, {name = stat(65), text = self:get_text()[1]})
+				-- reset the text inside the input field
 				self:set_text("")
 
 			end
@@ -41,7 +50,12 @@ function _init()
 			self.y = 0
 		end
 	}
-	
+
+	-- chat_log is a table containing all messages 
+	-- each message is a table containing:
+	--   .text 
+	--   .name
+	--   (.timestamp)
 	chat_log = {}
 	last_fetch = 0
 	fetch_interval = 30 
@@ -60,12 +74,17 @@ end
 function _draw() 
 	cls()
 	--print("Fetched scores: "..#chat_log)
-	
+
 	local start_y = 10
 	local max_lines = 12
+	local max_y = scr.h - 25
 	local start_index = max(1, #chat_log - max_lines + 1)
 	
+	-- for each message in the chat log
 	for i = start_index, #chat_log do
+		-- if we are past the bottom of the screen then dont print anymore
+		if start_y > max_y then break end
+		-- 
 		local msg = chat_log[i]
 		local text = type(msg.text) == "table" and msg.text[1] or msg.text
 		local line = msg.name..": "
@@ -74,7 +93,9 @@ function _draw()
 			for j = 1, #word do
 				local test = line..word:sub(j, j)
 				if print(test, 0, -99) > scr.w - 20 then
-					print(line, 5, start_y, 7)
+					if start_y <= max_y then
+						print(line, 5, start_y, 7)
+					end
 					start_y += 11
 					line = word:sub(j, j)
 				else
@@ -83,7 +104,9 @@ function _draw()
 			end
 			line = line.." "
 		end
-		print(line, 5, start_y, 7)
+		if start_y <= max_y then
+			print(line, 5, start_y, 7)
+		end
 		start_y += 11
 	end
 
