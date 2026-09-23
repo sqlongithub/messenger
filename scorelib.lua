@@ -75,6 +75,11 @@ end
 -- Updates the table that packets will be sent through
 -- Can be used for room id's
 function scoresub_set_table(name)
+    if _table ~= name then
+        _packets = {}
+        _old = {}
+        _highest = 0
+    end
     _table=name
 end
 
@@ -137,4 +142,12 @@ end
 -- - extra:     The extra string
 function scoresub_get_packet()
     return deli(_packets, 1)
+end
+
+function scoresub_send_system_packet(system_type, action)
+    return scoresub_send_packet("system|"..system_type.."|"..action)
+end
+
+function scoresub_parse_system_packet(packet)
+    return packet:match("^system|([^|]+)|([^|]+)$")
 end
