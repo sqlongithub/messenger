@@ -51,7 +51,7 @@ function scoresub_poll(include_sent)
         end
 
         -- Outgoing packets
-        if id == entry.user_id and not include_sent then
+        if id == entry.user_id then
             -- Skip
 
         -- Old packets

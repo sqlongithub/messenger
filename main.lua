@@ -9,10 +9,20 @@ sidebar_width = 45
 content_gap = 5
 content_padding = 5
 online_width = 55
-current_room = 1
+current_room = nil
 online_users = {}
+local_username = "unknown"
 
-function join_room(room_name)
+function add_local_presence()
+	local user_id = stat(64)
+	online_users[user_id] = {
+		name = local_username,
+		timestamp = 0,
+		online = true
+	}
+end
+
+function join_room(room_name, announce_join)
 	if current_room and current_room ~= room_name then
 		local previous_room = current_room
 		scoresub_set_table(previous_room)
@@ -21,9 +31,14 @@ function join_room(room_name)
 
 	current_room = room_name
 	chat_log = {}
+	if announce_join then
+		add(chat_log, {name = "system", text = "Joined "..room_name})
+	end
 	online_users = {}
 	scoresub_set_table(room_name)
 	scoresub_send_system_packet("presence", "join")
+	scoresub_send_system_packet("presence", "request")
+	add_local_presence()
 	if sidebar then
 		sidebar.selected_room = room_name
 	end
@@ -39,6 +54,10 @@ function handle_system_packet(packet)
 	local system_type, action = scoresub_parse_system_packet(packet.extra)
 	if not system_type then return false end
 	if system_type ~= "presence" then return true end
+	if action == "request" then
+		scoresub_send_system_packet("presence", "heartbeat")
+		return true
+	end
 
 	local user_id = packet.user_id or packet.username
 	local previous = online_users[user_id]
@@ -46,7 +65,7 @@ function handle_system_packet(packet)
 		online_users[user_id] = {
 			name = packet.username or tostring(user_id),
 			timestamp = packet.timestamp,
-			online = action == "join"
+			online = action == "join" or action == "heartbeat"
 		}
 	end
 	return true
@@ -111,9 +130,11 @@ function _init()
 				local room = line:match("^/room%s+(%S+)")
 
 				if room then
-					join_room("messenger_room_"..room)
+					join_room("messenger_room_"..room, true)
 				elseif line and line ~= "" then
-					scoresub_send_packet(line)
+					if scoresub_send_packet(line) then
+						add(chat_log, {name = local_username, text = line})
+					end
 				end
 
 				self:set_text("")
@@ -135,10 +156,11 @@ function _init()
 	--   .name
 	--   (.timestamp)
 	chat_log = {}
+	local_username = stat(65) or "unknown"
 	last_fetch = 0
 	fetch_interval = 30
 
-	join_room("messenger_room_1")
+	join_room("messenger_room_1", false)
 
 	for el in all(gui.child) do
 		if el.resize then
@@ -211,7 +233,7 @@ function _update()
 	sidebar:update()
 	gui:update_all() 
 
-	scoresub_poll(true)
+	scoresub_poll()
 
 	-- fetch new messages
 	while scoresub_packet_count() > 0 do
