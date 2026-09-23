@@ -1,5 +1,6 @@
 --[[pod_format="raw",created="2026-08-31 10:12:09",modified="2026-08-31 10:12:09",revision=1]]
 include("scorelib.lua")	
+include("sidebar.lua")
 
 scr = { w = 160, h = 168 }
 gui = create_gui({x = 0, y = 0, width = scr.w, height = scr.h})
@@ -60,6 +61,25 @@ function _init()
 	last_fetch = 0
 	fetch_interval = 30 
 
+	--init_sidebar(gui)
+	sidebar = gui:attach {
+        x = 5, y = 5, width = 50, height = scr.h - 10,
+
+        draw = function(self)
+			local parent = self.parent
+			local grandparent = parent and parent.parent
+			print("sidebar: "..self.x..","..self.y, 60, 10, 7)
+			print("parent: "..(parent and parent.x or "nil")..","..(parent and parent.y or "nil"), 60, 20, 7)
+			print("grandparent: "..(grandparent and grandparent.x or "nil")..","..(grandparent and grandparent.y or "nil"), 60, 30, 7)
+        end, 
+
+        resize = function(self)
+			self.x = 5
+			self.y = 5
+            self.height = scr.h - 10
+        end
+    }
+
 	scoresub_set_table("messenger_room_1")
 
 	for el in all(gui.child) do
@@ -73,6 +93,7 @@ end
 
 function _draw() 
 	cls()
+	rectfill(5, 5, 55, scr.h - 5, 4)
 	--print("Fetched scores: "..#chat_log)
 
 	local start_y = 10
@@ -107,7 +128,7 @@ function _draw()
 					-- start a new line with the current char which didnt fit
 					line = word:sub(j, j)
 				else
-					-- if it fits the line is just the entire word
+					-- if it fits the line is just the entire word (and all the previous words up to this point)
 					line = test
 				end
 			end
@@ -130,6 +151,7 @@ function _update()
 
 	scoresub_poll(true)
 
+	-- fetch new messages
 	while scoresub_packet_count() > 0 do
 		local packet = scoresub_get_packet()
 		if packet then
