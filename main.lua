@@ -224,9 +224,3 @@ function _update()
 	end
 end
 
-function _shutdown()
-	if current_room then
-		scoresub_set_table(current_room)
-		scoresub_send_system_packet("presence", "leave")
-	end
-end
