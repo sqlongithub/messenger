@@ -4,11 +4,12 @@ include("sidebar.lua")
 
 scr = { w = 300, h = 168 }
 gui = create_gui({x = 0, y = 0, width = scr.w, height = scr.h})
+
 sidebar_width = 45
 content_gap = 5
 content_padding = 5
 online_width = 55
-current_room = nil
+current_room = 1
 online_users = {}
 
 function join_room(room_name)
@@ -106,12 +107,16 @@ function _init()
 		x = 0, y = 0, width = content_width, height = 15,
 		key_callback = {
 			enter = function(self)
-				-- submit the message packet with the first line of the text editor
-				scoresub_send_packet(self:get_text()[1])
-				--add(chat_log, {name = stat(65), text = self:get_text()[1]})
-				-- reset the text inside the input field
-				self:set_text("")
+				local line = self:get_text()[1]
+				local room = line:match("^/room%s+(%S+)")
 
+				if room then
+					join_room("messenger_room_"..room)
+				elseif line and line ~= "" then
+					scoresub_send_packet(line)
+				end
+
+				self:set_text("")
 			end
 		},
 		resize = function(self)
@@ -131,7 +136,7 @@ function _init()
 	--   (.timestamp)
 	chat_log = {}
 	last_fetch = 0
-	fetch_interval = 30 
+	fetch_interval = 30
 
 	join_room("messenger_room_1")
 
